@@ -68,7 +68,7 @@ def run_main():
  
     # check and process input arguments
     if len(sys.argv) < 4:
-        print globals()['__doc__'] % locals()
+        print(globals()['__doc__'] % locals())
         sys.exit(1)
     input_file, output_model_file, output_vector_file = sys.argv[1:4]
 

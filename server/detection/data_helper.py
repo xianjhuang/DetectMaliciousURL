@@ -112,4 +112,4 @@ def batch_iter(data, batch_size, num_epochs, shuffle=True):
 if __name__ == "__main__":
     test = "rapiseebrains.com/?a=401336&c=cpc&s=050217"
     ans = getTokens(test)
-    print ans, len(ans)
+    print(ans, len(ans))

@@ -11,20 +11,21 @@ import csv
 # ==================================================
 
 # Data Parameters
-tf.flags.DEFINE_string("input_text_file", "../data/data2.csv", "Test text data source to evaluate.")
+tf.compat.v1.flags.DEFINE_string("input_text_file", "../data/data2.csv", "Test text data source to evaluate.")
 # tf.flags.DEFINE_string("input_label_file", "", "Label file for test text data source.")
-tf.flags.DEFINE_string("single_url",None,"single url to evaluate")
+tf.compat.v1.flags.DEFINE_string("single_url",None,"single url to evaluate")
 
 # Eval Parameters
-tf.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
-tf.flags.DEFINE_string("checkpoint_dir", "./runs/1494174954/checkpoints/", "Checkpoint directory from training run")
-tf.flags.DEFINE_boolean("eval_train", True, "Evaluate on all training data")
+tf.compat.v1.flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
+tf.compat.v1.flags.DEFINE_string("checkpoint_dir", "./runs/1494174954/checkpoints/", "Checkpoint directory from training run")
+tf.compat.v1.flags.DEFINE_boolean("eval_train", True, "Evaluate on all training data")
 # Misc Parameters
-tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
-tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
+tf.compat.v1.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
+tf.compat.v1.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
 
-FLAGS = tf.flags.FLAGS
-FLAGS._parse_flags()
+FLAGS = tf.compat.v1.flags.FLAGS
+#FLAGS._parse_flags()  #deprecated
+FLAGS.flag_values_dict()
 print("\nParameters:")
 for attr, value in sorted(FLAGS.__flags.items()):
     print("{}={}".format(attr.upper(), value))
@@ -78,13 +79,13 @@ print("\nEvaluating...\n")
 checkpoint_file = tf.train.latest_checkpoint(FLAGS.checkpoint_dir)
 graph = tf.Graph()
 with graph.as_default():
-    session_conf = tf.ConfigProto(
+    session_conf = tf.compat.v1.ConfigProto(
       allow_soft_placement=FLAGS.allow_soft_placement,
       log_device_placement=FLAGS.log_device_placement)
-    sess = tf.Session(config=session_conf)
+    sess = tf.compat.v1.Session(config=session_conf)
     with sess.as_default():
         # Load the saved meta graph and restore variables
-        saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_file))
+        saver = tf.compat.v1.train.import_meta_graph("{}.meta".format(checkpoint_file))
         saver.restore(sess, checkpoint_file)
 
         # Get the placeholders from the graph by name
@@ -117,12 +118,12 @@ if y_test is not None:
     print("Accuracy: {:g}".format(correct_predictions/float(len(y_test))))
 
 if FLAGS.single_url is not None:
-    print sentences
-    print "Result:", all_predictions
+    print(sentences)
+    print("Result:", all_predictions)
 else:
     # Save the evaluation to a csv
     predictions_human_readable = np.column_stack((np.array([text for text in x_raw]), all_predictions))
     out_path = os.path.join(FLAGS.checkpoint_dir, "..", "prediction.csv")
     print("Saving evaluation to {0}".format(out_path))
-    with open(out_path, 'w') as f:
+    with open(out_path, 'w',encoding = 'utf-8') as f:
         csv.writer(f).writerows(predictions_human_readable)

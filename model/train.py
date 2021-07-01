@@ -1,48 +1,55 @@
 # -*- coding: utf-8 -*-
-import data_helper ,word2vec_helpers
+import data_helper,word2vec_helpers
 import tensorflow as tf
+#import tensorflow.compat.v1 as tf
 import os ,time, datetime
 import numpy as np
-from sklearn.cross_validation import train_test_split
+#from sklearn.cross_validation import train_test_split   #deprecated
+from sklearn.model_selection import train_test_split
 from URLCNN import *
 import tempfile
 # Parameters
 # =======================================================
-
 # Data loading parameters
-tf.flags.DEFINE_string("data_file" ,"../data/data.csv", "Data source")
-tf.flags.DEFINE_integer("num_labels", 2, "Number of labels for data. (default: 2)")
+def del_all_flags(FLAGS):
+    for keys in [keys for keys in FLAGS._flags()]:
+        FLAGS.__delattr__(keys)
+
+del_all_flags(tf.compat.v1.flags.FLAGS)
+
+tf.compat.v1.flags.DEFINE_string("data_file" ,"../data/data.csv", "Data source")
+tf.compat.v1.flags.DEFINE_integer("num_labels", 2, "Number of labels for data. (default: 2)")
 #
 # # Model hyperparameters
-tf.flags.DEFINE_integer("embedding_dim", 64, "Dimensionality of character embedding (default: 128)")
-tf.flags.DEFINE_string("filter_sizes", "3,4,5", "Comma-spearated filter sizes (default: '3,4,5')")
-tf.flags.DEFINE_integer("num_filters", 128, "Number of filters per filter size (default: 128)")
-tf.flags.DEFINE_float("dropout_keep_prob", 0.5, "Dropout keep probability (default: 0.5)")
-tf.flags.DEFINE_float("l2_reg_lambda", 0.0, "L2 regularization lambda (default: 0.0)")
-tf.flags.DEFINE_integer("sequence_length", 100, "sequnce length of url embedding (default: 100)")
+tf.compat.v1.flags.DEFINE_integer("embedding_dim", 64, "Dimensionality of character embedding (default: 128)")
+tf.compat.v1.flags.DEFINE_string("filter_sizes", "3,4,5", "Comma-spearated filter sizes (default: '3,4,5')")
+tf.compat.v1.flags.DEFINE_integer("num_filters", 128, "Number of filters per filter size (default: 128)")
+tf.compat.v1.flags.DEFINE_float("dropout_keep_prob", 0.5, "Dropout keep probability (default: 0.5)")
+tf.compat.v1.flags.DEFINE_float("l2_reg_lambda", 0.0, "L2 regularization lambda (default: 0.0)")
+tf.compat.v1.flags.DEFINE_integer("sequence_length", 100, "sequnce length of url embedding (default: 100)")
 #
 # # Training paramters
-tf.flags.DEFINE_integer("batch_size", 32, "Batch Size (default: 64)")
-tf.flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 200)")
-tf.flags.DEFINE_integer("evaluate_every", 100, "Evalue model on dev set after this many steps (default: 100)")
-tf.flags.DEFINE_integer("checkpoint_every", 100, "Save model after this many steps (defult: 100)")
-tf.flags.DEFINE_integer("num_checkpoints", 5, "Number of checkpoints to store (default: 5)")
+tf.compat.v1.flags.DEFINE_integer("batch_size", 32, "Batch Size (default: 64)")
+tf.compat.v1.flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 200)")
+tf.compat.v1.flags.DEFINE_integer("evaluate_every", 100, "Evalue model on dev set after this many steps (default: 100)")
+tf.compat.v1.flags.DEFINE_integer("checkpoint_every", 100, "Save model after this many steps (defult: 100)")
+tf.compat.v1.flags.DEFINE_integer("num_checkpoints", 5, "Number of checkpoints to store (default: 5)")
 #
 # # Misc parameters
-tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
-tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
+tf.compat.v1.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
+tf.compat.v1.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
 # # Distribution
-tf.flags.DEFINE_boolean("replicas",False,"Use the dirstribution mode")
-tf.flags.DEFINE_boolean("is_sync",False,"Use the async or sync mode")
-tf.flags.DEFINE_string("ps_hosts","192.168.0.107:2222","comma-separated lst of hostname:port pairs")
-tf.flags.DEFINE_string("worker_hosts","10.211.55.14:2222,10.211.55.13:2222","comma-separated lst of hostname:port pairs")
-tf.flags.DEFINE_string("job_name",None,"job name:worker or ps")
-tf.flags.DEFINE_integer("task_index",0,"Worker task index,should be >=0, task=0 is "
+tf.compat.v1.flags.DEFINE_boolean("replicas",False,"Use the dirstribution mode")
+tf.compat.v1.flags.DEFINE_boolean("is_sync",False,"Use the async or sync mode")
+tf.compat.v1.flags.DEFINE_string("ps_hosts","192.168.0.107:2222","comma-separated lst of hostname:port pairs")
+tf.compat.v1.flags.DEFINE_string("worker_hosts","10.211.55.14:2222,10.211.55.13:2222","comma-separated lst of hostname:port pairs")
+tf.compat.v1.flags.DEFINE_string("job_name",None,"job name:worker or ps")
+tf.compat.v1.flags.DEFINE_integer("task_index",0,"Worker task index,should be >=0, task=0 is "
                                        "the master worker task the performs the variable initialization")
-tf.flags.DEFINE_string("log_dir","./runs/outputs/summary","parameter and log info")
+tf.compat.v1.flags.DEFINE_string("log_dir","./runs/outputs/summary","parameter and log info")
 # Parse parameters from commands
-FLAGS = tf.flags.FLAGS
-FLAGS._parse_flags()
+FLAGS = tf.compat.v1.flags.FLAGS
+FLAGS.flag_values_dict()
 if FLAGS.replicas==False:
  timestamp = str(int(time.time()))
  out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", timestamp))
@@ -271,15 +278,15 @@ if FLAGS.replicas==True:
 
 else:
     x_train, x_test, y_train, y_test =data_preprocess()
-    print "Training..."
+    print("Training...")
     # Training
     # =======================================================
     with tf.Graph().as_default():
-        session_conf = tf.ConfigProto(
+        session_conf = tf.compat.v1.ConfigProto(
             allow_soft_placement = FLAGS.allow_soft_placement,
             log_device_placement = FLAGS.log_device_placement)
 
-        sess = tf.Session(config = session_conf)
+        sess = tf.compat.v1.Session(config = session_conf)
         with sess.as_default():
             cnn = URLCNN(
             sequence_length = x_train.shape[1],
@@ -290,7 +297,7 @@ else:
             l2_reg_lambda = FLAGS.l2_reg_lambda)
 
             # Define Training procedure
-            optimizer = tf.train.AdamOptimizer(1e-3)
+            optimizer = tf.compat.v1.train.AdamOptimizer(1e-3)
             grads_and_vars = optimizer.compute_gradients(cnn.loss)
             global_step = tf.Variable(0, name="global_step", trainable=False)
             train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step)
@@ -299,38 +306,39 @@ else:
             grad_summaries = []
             for g, v in grads_and_vars:
                 if g is not None:
-                    grad_hist_summary = tf.summary.histogram("{}/grad/hist".format(v.name), g)
-                    sparsity_summary = tf.summary.scalar("{}/grad/sparsity".format(v.name), tf.nn.zero_fraction(g))
+                    grad_hist_summary = tf.compat.v1.summary.histogram("{}/grad/hist".format(v.name), g)
+                    sparsity_summary = tf.compat.v1.summary.scalar("{}/grad/sparsity".format(v.name), tf.compat.v1.nn.zero_fraction(g))
                     grad_summaries.append(grad_hist_summary)
                     grad_summaries.append(sparsity_summary)
-            grad_summaries_merged = tf.summary.merge(grad_summaries)
+            grad_summaries_merged = tf.compat.v1.summary.merge(grad_summaries)
+
 
             # Output directory for models and summaries
             print("Writing to {}\n".format(out_dir))
 
             # Summaries for loss and accuracy
-            loss_summary = tf.summary.scalar("loss", cnn.loss)
-            acc_summary = tf.summary.scalar("accuracy", cnn.accuracy)
+            loss_summary = tf.compat.v1.summary.scalar("loss", cnn.loss)
+            acc_summary = tf.compat.v1.summary.scalar("accuracy", cnn.accuracy)
 
             # Train Summaries
-            train_summary_op = tf.summary.merge([loss_summary, acc_summary, grad_summaries_merged])
+            train_summary_op = tf.compat.v1.summary.merge([loss_summary, acc_summary, grad_summaries_merged])
             train_summary_dir = os.path.join(out_dir, "summaries", "train")
-            train_summary_writer = tf.summary.FileWriter(train_summary_dir, sess.graph)
+            train_summary_writer = tf.compat.v1.summary.FileWriter(train_summary_dir, sess.graph)
 
             # Dev summaries
-            dev_summary_op = tf.summary.merge([loss_summary, acc_summary])
+            dev_summary_op = tf.compat.v1.summary.merge([loss_summary, acc_summary])
             dev_summary_dir = os.path.join(out_dir, "summaries", "dev")
-            dev_summary_writer = tf.summary.FileWriter(dev_summary_dir, sess.graph)
+            dev_summary_writer = tf.compat.v1.summary.FileWriter(dev_summary_dir, sess.graph)
 
             # Checkpoint directory. Tensorflow assumes this directory already exists so we need to create it
             checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
             checkpoint_prefix = os.path.join(checkpoint_dir, "model")
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
-            saver = tf.train.Saver(tf.global_variables(), max_to_keep=FLAGS.num_checkpoints)
+            saver = tf.compat.v1.train.Saver(tf.compat.v1.global_variables(), max_to_keep=FLAGS.num_checkpoints)
 
             # Initialize all variables
-            sess.run(tf.global_variables_initializer())
+            sess.run(tf.compat.v1.global_variables_initializer())
 
             def train_step(x_batch, y_batch):
                 """
@@ -374,7 +382,7 @@ else:
             for batch in batches:
                 x_batch, y_batch = zip(*batch)
                 train_step(x_batch, y_batch)
-                current_step = tf.train.global_step(sess, global_step)
+                current_step = tf.compat.v1.train.global_step(sess, global_step)
                 if current_step % FLAGS.evaluate_every == 0:
                     print("\nEvaluation:")
                     dev_step(x_test, y_test, writer=dev_summary_writer)

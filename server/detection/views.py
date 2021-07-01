@@ -28,7 +28,7 @@ class PredictService(object):
         checkpoint_file = tf.train.latest_checkpoint(checkpoint_path)
         if ckpt and ckpt.model_checkpoint_path:
             # print("Use the model {}".format(ckpt.model_checkpoint_path))
-            print "{}.meta".format(checkpoint_file)
+            print("{}.meta".format(checkpoint_file))
             saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_file))
             saver.restore(self.sess, checkpoint_file)
             self.input_x = self.graph.get_operation_by_name("input_x").outputs[0]
@@ -83,7 +83,7 @@ def predict(request):
     if request.method == 'GET':
         url = request.GET.get('url',0)
         if url != 0:
-          print url
+          print(url)
           result = predict_service.predict(url)
           return HttpResponse("Success to predict {}, result: {}".format(url,
             result))
